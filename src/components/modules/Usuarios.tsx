@@ -1,204 +1,404 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
-
-interface Municipio {
-  id_municipio: number;
-  nombre: string;
-}
-
-interface Rol {
-  id_rol: number;
-  nombre: string;
-}
-
-interface FormData {
-  identificacion: string;
-  nombres: string;
-  direccion: string;
-  telefono: string;
-  correo: string;
-  genero: string;
-  municipio_fk: string;
-  rol: string;
-  aplicativo_fk: string;
-  login: string;
-  password: string;
-  rol_credencial_fk: string;
-}
+import UserForm from "../organisms/UserForm";
+import UserTable from "../organisms/UserTable";
 
 export default function Usuarios() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [modoEdicion, setModoEdicion] = useState(false);
+  const [usuarios, setUsuarios] = useState([]);
+  const [municipios, setMunicipios] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const [busqueda, setBusqueda] = useState("");
 
-  const [municipios, setMunicipios] = useState<Municipio[]>([]);
-  const [roles, setRoles] = useState<Rol[]>([]);
-
-
-  const [form, setForm] = useState<FormData>({
-    identificacion: "",
+  const [form, setForm] = useState({
+    id_persona: "",
+    id_usuario: "",
+    id_credencial: "",
+    documento: "",
     nombres: "",
     direccion: "",
     telefono: "",
     correo: "",
     genero: "masculino",
+    estado: "activo",
     municipio_fk: "",
-    rol: "aprendiz",
     aplicativo_fk: "",
     login: "",
     password: "",
-    rol_credencial_fk: ""
+    rol_fk: ""
   });
 
-useEffect(() => {
-  if (mostrarFormulario) {
-    
-    axios.get("http://localhost:3000/municipio/listar", {
-      headers: { Authorization: `Bearer ${Cookies.get("token")}` }
-    }).then(res => setMunicipios(res.data));
+  useEffect(() => {
+    cargarUsuarios();
+  }, []);
 
-    axios.get("http://localhost:3000/roles/listar", {
-      headers: { Authorization: `Bearer ${Cookies.get("token")}` }
-    }).then(res => setRoles(res.data));
+  useEffect(() => {
+    if (mostrarFormulario) {
+      cargarMunicipios();
+      cargarRoles();
+    }
+  }, [mostrarFormulario]);
 
-  }
-}, [mostrarFormulario]);
+  const cargarUsuarios = async () => {
+    try {
+      const res = await axios.get("http://localhost:3000/usuario/listar", {
+        headers: { Authorization: `Bearer ${Cookies.get("token")}` }
+      });
+      setUsuarios(res.data);
+    } catch (error) {
+      console.error("Error cargando usuarios:", error);
+    }
+  };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const cargarMunicipios = async () => {
+    try {
+      const res = await axios.get("http://localhost:3000/municipio/listar", {
+        headers: { Authorization: `Bearer ${Cookies.get("token")}` }
+      });
+      setMunicipios(res.data);
+    } catch (error) {
+      console.error("Error cargando municipios:", error);
+    }
+  };
+
+  const cargarRoles = async () => {
+    try {
+      const res = await axios.get("http://localhost:3000/rol/listar", {
+        headers: { Authorization: `Bearer ${Cookies.get("token")}` }
+      });
+      setRoles(res.data);
+    } catch (error) {
+      console.error("Error cargando roles:", error);
+    }
+  };
+
+  const handleChange = (e: any) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
+    if (!form.documento || !form.nombres || !form.direccion || !form.telefono || 
+        !form.correo || !form.municipio_fk || !form.login || !form.rol_fk) {
+      alert("Por favor, complete todos los campos obligatorios.");
+      return;
+    }
+
     try {
-      const personaRes = await axios.post("http://localhost:3000/persona/registrar", {
-        identificacion: form.identificacion,
+      if (modoEdicion) {
+        await actualizarUsuario();
+      } else {
+        await crearUsuario();
+      }
+    } catch (e: any) {
+      console.error("Error completo:", e);
+      console.error("Respuesta del servidor:", e.response?.data);
+      console.error("Status:", e.response?.status);
+      console.error("Detalle completo:", JSON.stringify(e.response?.data, null, 2));
+      
+      const errorMsg = e.response?.data?.error || e.response?.data?.detalle || e.message;
+      alert(`Error: ${errorMsg}`);
+    }
+  };
+
+  const crearUsuario = async () => {
+    if (!form.password) {
+      alert("La contraseña es obligatoria para crear un usuario");
+      return;
+    }
+
+    const personaRes = await axios.post("http://localhost:3000/persona/registrar", {
+      documento: form.documento,
+      nombres: form.nombres,
+      direccion: form.direccion,
+      telefono: form.telefono,
+      correo: form.correo,
+      genero: form.genero,
+      estado: form.estado,
+      municipio_fk: Number(form.municipio_fk),
+    }, {
+      headers: { Authorization: `Bearer ${Cookies.get("token")}` }
+    });
+
+    const personaID = personaRes.data.id_persona;
+
+    const usuarioRes = await axios.post("http://localhost:3000/usuario/registrar", {
+      persona_fk: personaID,
+      aplicativo_fk: 1
+    }, {
+      headers: { Authorization: `Bearer ${Cookies.get("token")}` }
+    });
+
+    const usuarioID = usuarioRes.data.usuario.id_usuario;
+
+    // 3. Registrar credencial
+    await axios.post("http://localhost:3000/credencial/registrar", {
+      login: form.login,
+      password: form.password,
+      rol_fk: Number(form.rol_fk),
+      usuario_fk: usuarioID
+    }, {
+      headers: { Authorization: `Bearer ${Cookies.get("token")}` }
+    });
+
+    alert("Usuario creado correctamente");
+    resetearFormulario();
+    cargarUsuarios();
+  };
+
+  const actualizarUsuario = async () => {
+    console.log("Datos a actualizar:", {
+      id_persona: form.id_persona,
+      id_usuario: form.id_usuario,
+      id_credencial: form.id_credencial,
+      aplicativo_fk: form.aplicativo_fk
+    });
+
+    try {
+      // 1. Actualizar persona
+      const personaData = {
+        documento: Number(form.documento),
         nombres: form.nombres,
         direccion: form.direccion,
         telefono: form.telefono,
         correo: form.correo,
         genero: form.genero,
         municipio_fk: Number(form.municipio_fk),
-        rol: form.rol
+        estado: form.estado
+      };
+
+      console.log("Enviando datos de persona:", personaData);
+
+      const personaResponse = await axios.put(
+        `http://localhost:3000/persona/actualizar/${form.id_persona}`, 
+        personaData,
+        {
+          headers: { Authorization: `Bearer ${Cookies.get("token")}` }
+        }
+      );
+      
+      console.log("✅ Persona actualizada correctamente");
+
+      // 2. Actualizar usuario
+      const aplicativoFk = form.aplicativo_fk ? Number(form.aplicativo_fk) : 1;
+      
+      await axios.put(`http://localhost:3000/usuario/actualizar/${form.id_usuario}`, {
+        persona_fk: Number(form.id_persona),
+        aplicativo_fk: aplicativoFk
+      }, {
+        headers: { Authorization: `Bearer ${Cookies.get("token")}` }
       });
 
-      const personaID = personaRes.data.id_persona;
+      // 3. Actualizar credencial - SOLO SI EXISTE id_credencial
+      if (form.id_credencial) {
+        const credencialData: any = {
+          login: form.login,
+          rol_fk: Number(form.rol_fk),
+          usuario_fk: Number(form.id_usuario)
+        };
 
-      const usuarioRes = await axios.post("http://localhost:3000/usuario/registrar", {
-        persona_fk: personaID,
-        aplicativo_fk: Number(form.aplicativo_fk)
-      });
+        if (form.password && form.password.trim() !== "") {
+          credencialData.password = form.password;
+        }
 
-      const usuarioID = usuarioRes.data.id_usuario;
+        await axios.put(`http://localhost:3000/credencial/actualizar/${form.id_credencial}`, 
+          credencialData,
+          {
+            headers: { Authorization: `Bearer ${Cookies.get("token")}` }
+          }
+        );
+      } else {
+        // Si no tenemos id_credencial, buscar por usuario_fk
+        console.warn("⚠️ No se tiene id_credencial, buscando credencial...");
+        
+        const credencialData: any = {
+          login: form.login,
+          rol_fk: Number(form.rol_fk),
+          usuario_fk: Number(form.id_usuario)
+        };
 
-      await axios.post("http://localhost:3000/credencial/registrar", {
-        login: form.login,
-        password: form.password,
-        rol_fk: Number(form.rol_credencial_fk),
-        usuario_fk: usuarioID
-      });
+        if (form.password && form.password.trim() !== "") {
+          credencialData.password = form.password;
+        }
 
-      alert("Usuario creado correctamente");
-      setMostrarFormulario(false);
-    } catch (error) {
-      console.error(error);
-      alert("Error al crear usuario");
+        // Buscar credencial por usuario_fk
+        const credenciales = await axios.get(
+          `http://localhost:3000/credencial/buscar-por-usuario/${form.id_usuario}`,
+          {
+            headers: { Authorization: `Bearer ${Cookies.get("token")}` }
+          }
+        );
+
+        if (credenciales.data && credenciales.data.id_credencial) {
+          await axios.put(
+            `http://localhost:3000/credencial/actualizar/${credenciales.data.id_credencial}`,
+            credencialData,
+            {
+              headers: { Authorization: `Bearer ${Cookies.get("token")}` }
+            }
+          );
+        }
+      }
+
+      alert("Usuario actualizado correctamente");
+      resetearFormulario();
+      cargarUsuarios();
+    } catch (error: any) {
+      console.error("Error en actualización:", error);
+      throw error;
     }
   };
 
+  const handleEditar = (usuario: any) => {
+    console.log("Usuario a editar:", usuario);
+    console.log("Credenciales completas:", usuario.credenciales);
+    console.log("Primera credencial:", usuario.credenciales[0]);
+    
+    // Verificar si credenciales existe y tiene elementos
+    if (!usuario.credenciales || usuario.credenciales.length === 0) {
+      alert("Error: El usuario no tiene credenciales asociadas");
+      return;
+    }
+
+    const credencial = usuario.credenciales[0];
+    
+    setModoEdicion(true);
+    setForm({
+      id_persona: usuario.usuario_persona?.id_persona || "",
+      id_usuario: usuario.id_usuario || "",
+      id_credencial: credencial.id_credencial || "",
+      documento: usuario.usuario_persona?.documento || "",
+      nombres: usuario.usuario_persona?.nombres || "",
+      direccion: usuario.usuario_persona?.direccion || "",
+      telefono: usuario.usuario_persona?.telefono || "",
+      correo: usuario.usuario_persona?.correo || "",
+      genero: usuario.usuario_persona?.genero || "masculino",
+      estado: usuario.usuario_persona?.estado || "activo",
+      municipio_fk: usuario.usuario_persona?.municipio_fk || "",
+      aplicativo_fk: usuario.aplicativo_fk || "1",
+      login: credencial.login || "",
+      password: "",
+      rol_fk: credencial.rol_credencia?.id_rol || credencial.rol_fk || ""
+    });
+    
+    console.log("Formulario cargado con:", {
+      id_credencial: credencial.id_credencial,
+      login: credencial.login,
+      rol_fk: credencial.rol_credencia?.id_rol || credencial.rol_fk
+    });
+    
+    setMostrarFormulario(true);
+  };
+
+  const handleCambiarEstado = async (usuario: any) => {
+    const nuevoEstado = usuario.usuario_persona.estado === "activo" ? "inactivo" : "activo";
+    
+    if (!confirm(`¿Está seguro de cambiar el estado a ${nuevoEstado}?`)) {
+      return;
+    }
+
+    try {
+      await axios.put(`http://localhost:3000/persona/actualizar/${usuario.usuario_persona.id_persona}`, {
+        documento: usuario.usuario_persona.documento,
+        nombres: usuario.usuario_persona.nombres,
+        direccion: usuario.usuario_persona.direccion,
+        telefono: usuario.usuario_persona.telefono,
+        correo: usuario.usuario_persona.correo,
+        genero: usuario.usuario_persona.genero,
+        municipio_fk: usuario.usuario_persona.municipio_fk,
+        estado: nuevoEstado
+      }, {
+        headers: { Authorization: `Bearer ${Cookies.get("token")}` }
+      });
+
+      alert(`Usuario ${nuevoEstado === "activo" ? "activado" : "desactivado"} correctamente`);
+      cargarUsuarios();
+    } catch (error) {
+      console.error("Error cambiando estado:", error);
+      alert("Error al cambiar el estado del usuario");
+    }
+  };
+
+  const resetearFormulario = () => {
+    setForm({
+      id_persona: "",
+      id_usuario: "",
+      id_credencial: "",
+      documento: "",
+      nombres: "",
+      direccion: "",
+      telefono: "",
+      correo: "",
+      genero: "masculino",
+      estado: "activo",
+      municipio_fk: "",
+      aplicativo_fk: "",
+      login: "",
+      password: "",
+      rol_fk: ""
+    });
+    setMostrarFormulario(false);
+    setModoEdicion(false);
+  };
+
+  // Filtrar usuarios según búsqueda
+  const usuariosFiltrados = usuarios.filter((usuario: any) => {
+    const nombre = usuario.usuario_persona?.nombres?.toLowerCase() || "";
+    const documento = usuario.usuario_persona?.documento?.toString() || "";
+    const login = usuario.credenciales[0]?.login?.toLowerCase() || "";
+    
+    return nombre.includes(busqueda.toLowerCase()) || 
+           documento.includes(busqueda) || 
+           login.includes(busqueda.toLowerCase());
+  });
+
   return (
     <div className="w-full px-6 py-8">
-
       <h1 className="text-3xl font-bold text-center text-blue-600 mb-10">
-        Gestión de Usuario
+        Gestión de Usuarios
       </h1>
 
       <div className="flex justify-between mb-6">
         <input
           type="text"
-          placeholder="Buscar Usuario"
-          className="w-1/3 px-4 py-2 border rounded-full"
+          placeholder="Buscar por nombre, documento o usuario..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          className="w-1/2 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
         <button
-          onClick={() => setMostrarFormulario(true)}
-          className="px-6 py-2 bg-blue-600 text-white rounded-full"
+          onClick={() => {
+            setModoEdicion(false);
+            resetearFormulario();
+            setMostrarFormulario(true);
+          }}
+          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
         >
-          Añadir Usuario
+          + Añadir Usuario
         </button>
       </div>
 
       {mostrarFormulario && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center backdrop-blur-sm">
-          <div className="bg-white p-6 w-[650px] rounded-xl shadow-md">
-
-            <h2 className="text-xl font-bold text-blue-600 mb-4">
-              Crear Usuario
-            </h2>
-
-            <form onSubmit={handleSubmit} className="flex flex-col gap-1">
-
-              <input type="number" name="identificacion" placeholder="Identificación"
-                className="border p-2 rounded" onChange={handleChange} />
-
-              <input name="nombres" placeholder="Nombres"
-                className="border p-2 rounded" onChange={handleChange} />
-
-              <input name="direccion" placeholder="Dirección"
-                className="border p-2 rounded" onChange={handleChange} />
-
-              <input type="number" name="telefono" placeholder="Teléfono"
-                className="border p-2 rounded" onChange={handleChange} />
-
-              <input type="email" name="correo" placeholder="Correo"
-                className="border p-2 rounded" onChange={handleChange} />
-
-              <select name="genero" className="border p-2 rounded" onChange={handleChange}>
-                <option value="masculino">Masculino</option>
-                <option value="femenino">Femenino</option>
-              </select>
-
-              <select name="municipio_fk" className="border p-2 rounded" onChange={handleChange}>
-                <option value="">Seleccione municipio</option>
-                {municipios.map(m => (
-                  <option key={m.id_municipio} value={m.id_municipio}>{m.nombre}</option>
-                ))}
-              </select>
-
-              <input name="login" placeholder="Usuario"
-                className="border p-2 rounded" onChange={handleChange} />
-
-              <input name="password" type="password" placeholder="Contraseña"
-                className="border p-2 rounded" onChange={handleChange} />
-
-              <select name="rol_credencial_fk" className="border p-2 rounded" onChange={handleChange}>
-                <option value="">Seleccione rol</option>
-                {roles.map(r => (
-                  <option key={r.id_rol} value={r.id_rol}>{r.nombre}</option>
-                ))}
-              </select>
-
-              <div className="flex justify-end gap-3 mt-4">
-                <button
-                  type="button"
-                  onClick={() => setMostrarFormulario(false)}
-                  className="px-4 py-2 bg-gray-300 rounded"
-                >
-                  Cancelar
-                </button>
-
-                <button type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded">
-                  Guardar
-                </button>
-              </div>
-
-            </form>
-
-          </div>
-        </div>
+        <UserForm
+          form={form}
+          municipios={municipios}
+          roles={roles}
+          handleChange={handleChange}
+          handleSubmit={handleSubmit}
+          cerrar={resetearFormulario}
+          modoEdicion={modoEdicion}
+        />
       )}
 
+      <UserTable 
+        usuarios={usuariosFiltrados}
+        onEditar={handleEditar}
+        onCambiarEstado={handleCambiarEstado}
+      />
     </div>
   );
 }

@@ -134,7 +134,6 @@ export default function Usuarios() {
 
     const usuarioID = usuarioRes.data.usuario.id_usuario;
 
-    // 3. Registrar credencial
     await axios.post("http://localhost:3000/credencial/registrar", {
       login: form.login,
       password: form.password,
@@ -158,7 +157,6 @@ export default function Usuarios() {
     });
 
     try {
-      // 1. Actualizar persona
       const personaData = {
         documento: Number(form.documento),
         nombres: form.nombres,
@@ -182,7 +180,6 @@ export default function Usuarios() {
       
       console.log("✅ Persona actualizada correctamente");
 
-      // 2. Actualizar usuario
       const aplicativoFk = form.aplicativo_fk ? Number(form.aplicativo_fk) : 1;
       
       await axios.put(`http://localhost:3000/usuario/actualizar/${form.id_usuario}`, {
@@ -191,8 +188,6 @@ export default function Usuarios() {
       }, {
         headers: { Authorization: `Bearer ${Cookies.get("token")}` }
       });
-
-      // 3. Actualizar credencial - SOLO SI EXISTE id_credencial
       if (form.id_credencial) {
         const credencialData: any = {
           login: form.login,
@@ -211,8 +206,7 @@ export default function Usuarios() {
           }
         );
       } else {
-        // Si no tenemos id_credencial, buscar por usuario_fk
-        console.warn("⚠️ No se tiene id_credencial, buscando credencial...");
+        console.warn("No se tiene id_credencial, buscando credencial...");
         
         const credencialData: any = {
           login: form.login,
@@ -224,7 +218,6 @@ export default function Usuarios() {
           credencialData.password = form.password;
         }
 
-        // Buscar credencial por usuario_fk
         const credenciales = await axios.get(
           `http://localhost:3000/credencial/buscar-por-usuario/${form.id_usuario}`,
           {
@@ -257,7 +250,6 @@ export default function Usuarios() {
     console.log("Credenciales completas:", usuario.credenciales);
     console.log("Primera credencial:", usuario.credenciales[0]);
     
-    // Verificar si credenciales existe y tiene elementos
     if (!usuario.credenciales || usuario.credenciales.length === 0) {
       alert("Error: El usuario no tiene credenciales asociadas");
       return;
@@ -344,15 +336,14 @@ export default function Usuarios() {
     setModoEdicion(false);
   };
 
-  // Filtrar usuarios según búsqueda
   const usuariosFiltrados = usuarios.filter((usuario: any) => {
     const nombre = usuario.usuario_persona?.nombres?.toLowerCase() || "";
     const documento = usuario.usuario_persona?.documento?.toString() || "";
     const login = usuario.credenciales[0]?.login?.toLowerCase() || "";
     
     return nombre.includes(busqueda.toLowerCase()) || 
-           documento.includes(busqueda) || 
-           login.includes(busqueda.toLowerCase());
+          documento.includes(busqueda) || 
+          login.includes(busqueda.toLowerCase());
   });
 
   return (
@@ -376,9 +367,8 @@ export default function Usuarios() {
             resetearFormulario();
             setMostrarFormulario(true);
           }}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          + Añadir Usuario
+          className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition bosx-shadow-lg shadow-blue-200 font-bold"
+        >+ Añadir Usuario
         </button>
       </div>
 

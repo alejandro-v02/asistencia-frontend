@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Tabla Usuario para Autenticación (No estaba en el diagrama pero es necesaria para Login)
+model User {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  documento String   @unique // Login credentials
+  password  String
+  role      Role     @default(APRENDIZ)
+  ficha     String?
+  
+  // Relación hipotética: Un usuario puede tener una configuración (Si Configuracion == Perfil)
+  // O un usuario tiene una matricula. Por ahora lo mantengo simple para Auth.
+}
+
+enum Role {
+  ADMIN
+  INSTRUCTOR
+  APRENDIZ
+}
+
+// --- Tablas del Diagrama ---
+
+model Sesion {
+  id_sesion     Int      @id @default(autoincrement())
+  fecha         DateTime @db.Date
+  hora_inicio   DateTime // Stores full datetime
+  hora_fin      DateTime // Stores full datetime
+  fk_id_horario Int      // Relación placeholder
+  ficha         String   // Ficha asignada a la sesión
+
+  excusas     Excusa[]
+  asistencias Asistencia[]
+}
+
+model Excusa {
+  id_excusa       Int    @id @default(autoincrement())
+  archivo_soporte String // Path to PDF
+  
+  fk_id_sesion Int
+  sesion       Sesion @relation(fields: [fk_id_sesion], references: [id_sesion])
+}
+
+model Asistencia {
+  id_asistencia Int           @id @default(autoincrement())
+  
+  fk_id_sesion  Int
+  sesion        Sesion        @relation(fields: [fk_id_sesion], references: [id_sesion])
+  
+  estado_aprendiz EstadoAprendiz
+  hora            DateTime      @db.Time
+  observaciones   String?       @db.Text
+  
+  fk_id_configuracion Int
+  configuracion       Configuracion @relation(fields: [fk_id_configuracion], references: [id_configuracion])
+}
+
+model Configuracion {
+  id_configuracion Int    @id @default(autoincrement())
+  firma            String // Path/URL png
+  foto             String // Path/URL png
+  fk_id_matricula  Int    // Relación a Matricula (Aprendiz)
+  
+  asistencias Asistencia[]
+}
+
+
+enum EstadoAprendiz {
+  asistio
+  falla
+  excusa
+  retraso
+}

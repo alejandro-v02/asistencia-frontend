@@ -1,10 +1,10 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ClipboardCheck, BarChart3, LogOut,Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import SidebarItem from "../molecules/SidebarItem";
+import { ClipboardCheck, BarChart3, LogOut, Sparkles } from "lucide-react";
 import Cookies from "js-cookie";
 import axios from "axios";
 
 export default function SidebarInstru() {
-  const location = useLocation();
   const navigate = useNavigate();
 
   const menuItems = [
@@ -18,7 +18,7 @@ export default function SidebarInstru() {
       path: "/dashboard-instructor/reportes",
       icon: <BarChart3 size={25} />,
     },
-        {
+    {
       name: "Explorador IA",
       path: "/dashboard-instructor/explorador",
       icon: <Sparkles size={25} />,
@@ -60,35 +60,14 @@ export default function SidebarInstru() {
       </div>
 
       <nav className="flex-1 space-y-2">
-        {menuItems.map((item) => {
-          const isActive = location.pathname === item.path;
-
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 group ${
-                isActive
-                  ? "bg-blue-600 text-white shadow-md shadow-blue-200"
-                  : "hover:bg-blue-50 hover:text-blue-600"
-              }`}
-            >
-              <span
-                className={`${
-                  isActive
-                    ? "text-white"
-                    : "text-slate-400 group-hover:text-blue-600"
-                }`}
-              >
-                {item.icon}
-              </span>
-
-              <span className="font-medium">
-                {item.name}
-              </span>
-            </Link>
-          );
-        })}
+        {menuItems.map((item) => (
+          <SidebarItem
+            key={item.path}
+            path={item.path}
+            name={item.name}
+            icon={item.icon}
+          />
+        ))}
       </nav>
 
       <div className="border-t border-gray-100 pt-4">

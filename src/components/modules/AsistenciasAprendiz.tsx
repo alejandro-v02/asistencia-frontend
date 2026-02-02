@@ -1,4 +1,6 @@
 import AsistenciasActivasAprendiz from "../organisms/AsistenciasActivasAprendiz";
+import PageTitle from "../atoms/PageTitle";
+import ActionHeader from "../molecules/ActionHeader";
 
 export default function AsistenciasAprendiz() {
   const asistencias = [
@@ -13,18 +15,14 @@ export default function AsistenciasAprendiz() {
   ];
 
   return (
-    <div className="bg-white p-8 rounded-3xl shadow-sm">
+    <div className="w-full px-6 py-8">
+      <ActionHeader>
+        <PageTitle title="Módulo de" highlight="Asistencias" subtitle="Revisa y confirma tus asistencias activas." />
+      </ActionHeader>
 
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-extrabold text-blue-600">
-          Módulo de Asistencias
-        </h2>
-        <p className="text-gray-600 mt-2">
-          Revisa y confirma tus asistencias activas
-        </p>
+      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+        <AsistenciasActivasAprendiz asistencias={asistencias} />
       </div>
-
-      <AsistenciasActivasAprendiz asistencias={asistencias} />
     </div>
   );
 }

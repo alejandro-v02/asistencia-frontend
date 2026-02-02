@@ -1,7 +1,16 @@
+import PageTitle from "../atoms/PageTitle";
+import ActionHeader from "../molecules/ActionHeader";
+
 export default function ReportesInstru() {
   return (
-    <div className="p-4 rounded-xl bg-white">
-      <h2 className="text-2xl font-bold">Módulo: Reportes</h2>
-      <p className="text-gray-700">Aquí irá el contenido de Reportes…</p>
+    <div className="w-full px-6 py-8">
+      <ActionHeader>
+        <PageTitle title="Reportes y" highlight="Estadísticas" subtitle="Visualiza el rendimiento y asistencia." />
+      </ActionHeader>
+
+      <div className="p-8 rounded-3xl bg-white border border-slate-100 shadow-sm text-center">
+        <p className="text-gray-500">Próximamente: Gráficos y exportación de datos.</p>
+      </div>
     </div>
-  );}
+  );
+}

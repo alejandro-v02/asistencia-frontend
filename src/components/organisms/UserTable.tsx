@@ -1,4 +1,5 @@
 import { UserCog, Power, UserCheck } from "lucide-react";
+import StatusBadge from "../atoms/StatusBadge";
 
 export default function UserTable({ usuarios, onEditar, onCambiarEstado }: any) {
   return (
@@ -24,8 +25,8 @@ export default function UserTable({ usuarios, onEditar, onCambiarEstado }: any) 
               </tr>
             ) : (
               usuarios.map((usuario: any) => (
-                <tr 
-                  key={usuario.id_usuario} 
+                <tr
+                  key={usuario.id_usuario}
                   className="hover:bg-blue-50/30 transition-colors group"
                 >
                   {/* Documento */}
@@ -58,16 +59,7 @@ export default function UserTable({ usuarios, onEditar, onCambiarEstado }: any) 
 
                   {/* Estado */}
                   <td className="px-6 py-4 text-center">
-                    <span 
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide ${
-                        usuario.usuario_persona?.estado === "activo"
-                          ? "bg-green-100 text-green-700 border border-green-200"
-                          : "bg-red-100 text-red-700 border border-red-200"
-                      }`}
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full mr-2 ${usuario.usuario_persona?.estado === "activo" ? "bg-green-500" : "bg-red-500"}`}></span>
-                      {usuario.usuario_persona?.estado || "N/A"}
-                    </span>
+                    <StatusBadge status={usuario.usuario_persona?.estado || "N/A"} />
                   </td>
 
                   {/* Acciones */}
@@ -83,11 +75,10 @@ export default function UserTable({ usuarios, onEditar, onCambiarEstado }: any) 
                       </button>
                       <button
                         onClick={() => onCambiarEstado(usuario)}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all shadow-sm text-xs font-bold border ${
-                          usuario.usuario_persona?.estado === "activo"
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all shadow-sm text-xs font-bold border ${usuario.usuario_persona?.estado === "activo"
                             ? "bg-white text-red-500 border-red-100 hover:bg-red-500 hover:text-white"
                             : "bg-white text-green-600 border-green-100 hover:bg-green-600 hover:text-white"
-                        }`}
+                          }`}
                         title={usuario.usuario_persona?.estado === "activo" ? "Desactivar" : "Activar"}
                       >
                         {usuario.usuario_persona?.estado === "activo" ? <Power size={14} /> : <UserCheck size={14} />}

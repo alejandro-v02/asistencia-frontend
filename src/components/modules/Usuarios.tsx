@@ -14,6 +14,8 @@ export default function Usuarios() {
     identificacion: "",
 =======
 import UserTable from "../organisms/UserTable";
+import PageTitle from "../atoms/PageTitle";
+import ActionHeader from "../molecules/ActionHeader";
 
 export default function Usuarios() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
@@ -116,8 +118,8 @@ export default function Usuarios() {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
-    if (!form.documento || !form.nombres || !form.direccion || !form.telefono || 
-        !form.correo || !form.municipio_fk || !form.login || !form.rol_fk) {
+    if (!form.documento || !form.nombres || !form.direccion || !form.telefono ||
+      !form.correo || !form.municipio_fk || !form.login || !form.rol_fk) {
       alert("Por favor, complete todos los campos obligatorios.");
       return;
     }
@@ -147,7 +149,7 @@ export default function Usuarios() {
       console.error("Respuesta del servidor:", e.response?.data);
       console.error("Status:", e.response?.status);
       console.error("Detalle completo:", JSON.stringify(e.response?.data, null, 2));
-      
+
       const errorMsg = e.response?.data?.error || e.response?.data?.detalle || e.message;
       alert(`Error: ${errorMsg}`);
     }
@@ -220,17 +222,17 @@ export default function Usuarios() {
       console.log("Enviando datos de persona:", personaData);
 
       const personaResponse = await axios.put(
-        `http://localhost:3000/persona/actualizar/${form.id_persona}`, 
+        `http://localhost:3000/persona/actualizar/${form.id_persona}`,
         personaData,
         {
           headers: { Authorization: `Bearer ${Cookies.get("token")}` }
         }
       );
-      
+
       console.log("Persona actualizada correctamente");
 
       const aplicativoFk = form.aplicativo_fk ? Number(form.aplicativo_fk) : 1;
-      
+
       await axios.put(`http://localhost:3000/usuario/actualizar/${form.id_usuario}`, {
         persona_fk: Number(form.id_persona),
         aplicativo_fk: aplicativoFk
@@ -264,7 +266,7 @@ export default function Usuarios() {
         }
 >>>>>>> 85bb714 (Refactorización: Implementación de Atomic Design y reorganización de componentes)
 
-        await axios.put(`http://localhost:3000/credencial/actualizar/${form.id_credencial}`, 
+        await axios.put(`http://localhost:3000/credencial/actualizar/${form.id_credencial}`,
           credencialData,
           {
             headers: { Authorization: `Bearer ${Cookies.get("token")}` }
@@ -272,7 +274,7 @@ export default function Usuarios() {
         );
       } else {
         console.warn("No se tiene id_credencial, buscando credencial...");
-        
+
         const credencialData: any = {
           login: form.login,
           rol_fk: Number(form.rol_fk),
@@ -327,14 +329,14 @@ export default function Usuarios() {
     console.log("Usuario a editar:", usuario);
     console.log("Credenciales completas:", usuario.credenciales);
     console.log("Primera credencial:", usuario.credenciales[0]);
-    
+
     if (!usuario.credenciales || usuario.credenciales.length === 0) {
       alert("Error: El usuario no tiene credenciales asociadas");
       return;
     }
 
     const credencial = usuario.credenciales[0];
-    
+
     setModoEdicion(true);
     setForm({
       id_persona: usuario.usuario_persona?.id_persona || "",
@@ -353,19 +355,19 @@ export default function Usuarios() {
       password: "",
       rol_fk: credencial.rol_credencia?.id_rol || credencial.rol_fk || ""
     });
-    
+
     console.log("Formulario cargado con:", {
       id_credencial: credencial.id_credencial,
       login: credencial.login,
       rol_fk: credencial.rol_credencia?.id_rol || credencial.rol_fk
     });
-    
+
     setMostrarFormulario(true);
   };
 
   const handleCambiarEstado = async (usuario: any) => {
     const nuevoEstado = usuario.usuario_persona.estado === "activo" ? "inactivo" : "activo";
-    
+
     if (!confirm(`¿Está seguro de cambiar el estado a ${nuevoEstado}?`)) {
       return;
     }
@@ -418,37 +420,38 @@ export default function Usuarios() {
     const nombre = usuario.usuario_persona?.nombres?.toLowerCase() || "";
     const documento = usuario.usuario_persona?.documento?.toString() || "";
     const login = usuario.credenciales[0]?.login?.toLowerCase() || "";
-    
-    return nombre.includes(busqueda.toLowerCase()) || 
-          documento.includes(busqueda) || 
-          login.includes(busqueda.toLowerCase());
+
+    return nombre.includes(busqueda.toLowerCase()) ||
+      documento.includes(busqueda) ||
+      login.includes(busqueda.toLowerCase());
   });
 
   return (
     <div className="w-full px-6 py-8">
-      <h1 className="text-3xl font-bold text-center text-blue-600 mb-10">
-        Gestión de Usuarios
-      </h1>
+      <ActionHeader>
+        <PageTitle title="Gestión de" highlight="Usuarios" subtitle="Administra el acceso y datos de los usuarios del sistema." />
 
-      <div className="flex justify-between mb-6">
-        <input
-          type="text"
-          placeholder="Buscar por nombre, documento o usuario..."
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-          className="w-1/2 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+        <div className="flex gap-3 items-center">
+          <input
+            type="text"
+            placeholder="Buscar usuario..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-64"
+          />
 
-        <button
-          onClick={() => {
-            setModoEdicion(false);
-            resetearFormulario();
-            setMostrarFormulario(true);
-          }}
-          className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition bosx-shadow-lg shadow-blue-200 font-bold"
-        >+ Añadir Usuario
-        </button>
-      </div>
+          <button
+            onClick={() => {
+              setModoEdicion(false);
+              resetearFormulario();
+              setMostrarFormulario(true);
+            }}
+            className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-200 font-bold whitespace-nowrap"
+          >
+            + Usuario
+          </button>
+        </div>
+      </ActionHeader>
 
       {mostrarFormulario && (
         <UserForm
@@ -471,7 +474,7 @@ export default function Usuarios() {
         />
       )}
 
-      <UserTable 
+      <UserTable
         usuarios={usuariosFiltrados}
         onEditar={handleEditar}
         onCambiarEstado={handleCambiarEstado}

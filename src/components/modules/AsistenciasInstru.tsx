@@ -1,53 +1,51 @@
 import { useState } from "react";
-import TitleInstru from "../atoms/TitleInstru";
+import PageTitle from "../atoms/PageTitle";
+import ActionHeader from "../molecules/ActionHeader";
 import SearchBarInstru from "../molecules/SearchBarInstru";
 import AsistenciasActivasInstru from "../organisms/AsistenciasActivasInstru";
-import ModalNuevaAsistenciaInstru from "../organisms/ModalNuevaAsistenciaInstru";
 import AsistenciaEnCursoInstru from "../organisms/AsistenciaEnCursoInstru";
+import ModalNuevaAsistenciaInstru from "../organisms/ModalNuevaAsistenciaInstru";
 
 export default function AsistenciasInstru() {
-  const [openNueva, setOpenNueva] = useState(false);
   const [vista, setVista] = useState<"NORMAL" | "EN_CURSO">("NORMAL");
+  const [asistenciasActivas, setAsistenciasActivas] = useState([]);
   const [asistenciaEnCurso, setAsistenciaEnCurso] = useState<any>(null);
-  const [asistenciasActivas, setAsistenciasActivas] = useState<any[]>([]);
+  const [openNueva, setOpenNueva] = useState(false);
 
+  // Funciones placeholder para mantener la lógica visual
   const iniciarAsistencia = (data: any) => {
-    setAsistenciaEnCurso({
-      ...data,
-      aprendices: [
-        { id: 1, nombre: "Juan Pérez", documento: "123", asistio: false },
-        { id: 2, nombre: "María López", documento: "456", asistio: false },
-        { id: 3, nombre: "Carlos Ruiz", documento: "789", asistio: false },
-      ],
-    });
-
+    console.log("Iniciando asistencia:", data);
+    setAsistenciaEnCurso(data);
     setVista("EN_CURSO");
     setOpenNueva(false);
   };
 
   const finalizarAsistencia = () => {
-    setAsistenciasActivas((prev) => [...prev, asistenciaEnCurso]);
     setAsistenciaEnCurso(null);
     setVista("NORMAL");
   };
 
   return (
-    <div className="p-6 bg-white rounded-3xl shadow-sm">
-      <TitleInstru  text="Módulo de Asistencias" />
+    <div className="w-full px-6 py-8">
+      <ActionHeader>
+        <PageTitle title="Panel de" highlight="Asistencias" subtitle="Gestiona y monitorea las sesiones de clase." />
+      </ActionHeader>
 
-      {vista === "NORMAL" && (
-        <>
-          <SearchBarInstru onNueva={() => setOpenNueva(true)} />
-          <AsistenciasActivasInstru asistencias={asistenciasActivas} />
-        </>
-      )}
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+        {vista === "NORMAL" && (
+          <>
+            <SearchBarInstru onNueva={() => setOpenNueva(true)} />
+            <AsistenciasActivasInstru asistencias={asistenciasActivas} />
+          </>
+        )}
 
-      {vista === "EN_CURSO" && asistenciaEnCurso && (
-        <AsistenciaEnCursoInstru
-          asistencia={asistenciaEnCurso}
-          onFinalizar={finalizarAsistencia}
-        />
-      )}
+        {vista === "EN_CURSO" && asistenciaEnCurso && (
+          <AsistenciaEnCursoInstru
+            asistencia={asistenciaEnCurso}
+            onFinalizar={finalizarAsistencia}
+          />
+        )}
+      </div>
 
       <ModalNuevaAsistenciaInstru
         open={openNueva}

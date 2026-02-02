@@ -8,6 +8,8 @@ import SedeForm from "../organisms/SedeForm";
 import CentroTable from "../organisms/CentroTable";
 
 import { Building, MapPinned } from "lucide-react";
+import PageTitle from "../atoms/PageTitle";
+import ActionHeader from "../molecules/ActionHeader";
 //  PlusCircle,
 
 export default function Centros() {
@@ -139,18 +141,13 @@ export default function Centros() {
     setMostrarSedeForm(false);
   };
 
-return (
+  return (
     <div className="p-2 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">
-            Centros de <span className="text-blue-600">Formación</span>
-          </h1>
-          <p className="text-slate-500 text-sm font-medium">Gestiona las sedes y centros vinculados al sistema.</p>
-        </div>
+      <ActionHeader>
+        <PageTitle title="Centros de" highlight="Formación" subtitle="Gestiona las sedes y centros vinculados al sistema." />
 
         <div className="flex flex-wrap gap-3">
-          <button 
+          <button
             onClick={() => setMostrarCentroForm(true)}
             className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-blue-300 transition-all active:scale-95"
           >
@@ -158,7 +155,7 @@ return (
             <span>Nuevo Centro</span>
           </button>
 
-          <button 
+          <button
             onClick={() => setMostrarSedeForm(true)}
             className="flex items-center gap-2 px-6 py-3 bg-slate-800 text-white rounded-2xl font-bold shadow-lg shadow-slate-200 hover:bg-slate-900 transition-all active:scale-95"
           >
@@ -166,7 +163,7 @@ return (
             <span>Nueva Sede</span>
           </button>
         </div>
-      </div>
+      </ActionHeader>
 
       <div className="bg-white rounded-3xl">
         <CentroTable

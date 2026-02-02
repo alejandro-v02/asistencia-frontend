@@ -1,19 +1,19 @@
 import Header from "../components/organisms/Header";
-import Sidebar from "../components/organisms/Sidebar";
+import SidebarInstru from "../components/organisms/SidebarInstru";
 import { Routes, Route } from "react-router-dom";
-import Asistencias from "../components/modules/Asistencias";
-import Usuarios from "../components/modules/Usuarios";
-import Centros from "../components/modules/Centros";
+import AsistenciasInstru from "../components/modules/AsistenciasInstru";
+import ReportesInstru from "../components/modules/ReportesInstru";
+import Explorador from "../components/modules/ExploradorIaInstru";
 
 import senaImage from "../assets/img/sena.jpg";
 
-export default function DashboardTemplate() {
+export default function DashboardTemplateInstru() {
   return (
     <div className="h-screen flex flex-col bg-slate-50">
       <Header />
 
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
+        <SidebarInstru />
 
         <main className="flex-1 bg-white rounded-3xl m-2 ml-2 p-4 shadow-sm border border-gray-100 overflow-y-auto">
           <Routes>
@@ -52,10 +52,9 @@ export default function DashboardTemplate() {
                 </div>
               }
             />
-
-            <Route path="usuarios" element={<Usuarios />} />
-            <Route path="asistencias" element={<Asistencias />} />
-            <Route path="centros" element={<Centros />} />
+            <Route path="asistencias" element={<AsistenciasInstru />} />
+            <Route path="reportes" element={<ReportesInstru />} />
+            <Route path="explorador" element={<Explorador />} />
           </Routes>
         </main>
       </div>

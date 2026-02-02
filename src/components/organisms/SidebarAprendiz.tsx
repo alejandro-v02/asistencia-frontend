@@ -1,18 +1,25 @@
 import { Link, useLocation } from "react-router-dom";
-import { Users, School, LogOut } from "lucide-react";
+import { ClipboardCheck, BarChart3, LogOut } from "lucide-react";
 import Cookies from "js-cookie";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-export default function Sidebar() {
+export default function SidebarInstru() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const menuItems = [
-    { name: "Usuarios", path: "/dashboard/usuarios", icon: <Users size={20} /> },
-    { name: "Centros de formación", path: "/dashboard/centros", icon: <School size={20} /> },
-  ];
-
+    const menuItems = [
+      {
+        name: "Asistencias",
+        path: "/dashboard-aprendiz/asistencias",
+        icon: <ClipboardCheck size={25} />,
+      },
+      {
+        name: "Reportes",
+        path: "/dashboard-aprendiz/reportes",
+        icon: <BarChart3 size={25} />,
+      },
+    ];
 const handleLogout = async () => {
   try {
     const token = Cookies.get("token");
@@ -42,7 +49,7 @@ const handleLogout = async () => {
     <aside className="w-64 h-[calc(80vh-40px)] m-5 rounded-3xl bg-white shadow-xl text-slate-600 p-6 flex flex-col">
 
       <div className="mb-10 px-2">
-        <h2 className="text-2xl font-bold text-blue-600">Administrador</h2>
+        <h2 className="text-2xl font-bold text-blue-600">Aprendiz</h2>
       </div>
 
       <nav className="flex-1 space-y-2">

@@ -227,7 +227,7 @@ export default function Usuarios() {
         }
       );
       
-      console.log("✅ Persona actualizada correctamente");
+      console.log("Persona actualizada correctamente");
 
       const aplicativoFk = form.aplicativo_fk ? Number(form.aplicativo_fk) : 1;
       

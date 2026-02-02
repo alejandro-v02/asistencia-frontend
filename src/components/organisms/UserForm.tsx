@@ -187,12 +187,12 @@ export default function UserForm({form,municipios,roles,handleChange,handleSubmi
           className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4"
         >
           <InputGroup
-            label="Documento"
+            label="Número de Documento"
             name="documento"
             type="number"
             value={form.documento}
             onChange={handleChange}
-            placeholder="CC / TI"
+            placeholder="10001"
             required
           />
 

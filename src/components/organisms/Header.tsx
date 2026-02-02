@@ -21,7 +21,7 @@ export default function Header() {
         <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 group transition-all duration-200">
             <UserIcon className="w-8 h-8 text-blue-600 group-hover:text-white transition-colors" />
         </div>
-        <span className="text-xl font-medium tracking-tight">
+        <span className="text-xl font-bold tracking-tight">
             {token ? nombre : "Invitado"}
         </span>
         </div>

@@ -1,19 +1,17 @@
 import Header from "../components/organisms/Header";
-import Sidebar from "../components/organisms/Sidebar";
+import SidebarAprendiz from "../components/organisms/SidebarAprendiz";
 import { Routes, Route } from "react-router-dom";
-import Asistencias from "../components/modules/Asistencias";
-import Usuarios from "../components/modules/Usuarios";
-import Centros from "../components/modules/Centros";
-
 import senaImage from "../assets/img/sena.jpg";
+import AsistenciasAprendiz from "../components/modules/AsistenciasAprendiz";
+import ReportesAprendiz from "../components/modules/ReportesAprendiz";
 
-export default function DashboardTemplate() {
+export default function DashboardTemplateAprendiz() {
   return (
     <div className="h-screen flex flex-col bg-slate-50">
       <Header />
 
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
+        <SidebarAprendiz />
 
         <main className="flex-1 bg-white rounded-3xl m-2 ml-2 p-4 shadow-sm border border-gray-100 overflow-y-auto">
           <Routes>
@@ -52,10 +50,8 @@ export default function DashboardTemplate() {
                 </div>
               }
             />
-
-            <Route path="usuarios" element={<Usuarios />} />
-            <Route path="asistencias" element={<Asistencias />} />
-            <Route path="centros" element={<Centros />} />
+            <Route path="asistencias" element={<AsistenciasAprendiz />} />
+            <Route path="reportes" element={<ReportesAprendiz />} />
           </Routes>
         </main>
       </div>

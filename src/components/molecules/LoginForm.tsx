@@ -18,17 +18,28 @@ export default function LoginForm() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ login, password }),
             });
-
+        
             if (!res.ok) throw new Error("Credenciales incorrectas");
-
+        
             const data = await res.json();
+        
             Cookies.set("token", data.token, { expires: 1 });
             Cookies.set("nombre", data.usuario.persona, { expires: 1 });
             Cookies.set("rol", data.usuario.rol, { expires: 1 });
-
-            return "Login Exitoso";
+        
+            return data.usuario.rol; // 👈 IMPORTANTE
         },
-        onSuccess: () => navigate("/dashboard")
+        onSuccess: (rol) => {
+            if (rol === "ADMINISTRADOR") {
+                navigate("/dashboard");
+            } else if (rol === "INSTRUCTOR") {
+                navigate("/dashboard-instructor");
+            } else if (rol === "APRENDIZ") {
+                navigate("/dashboard-aprendiz");
+            } else {
+                navigate("/");
+            }
+        }
     });
 
     const handleSubmit = (e: React.FormEvent) => {

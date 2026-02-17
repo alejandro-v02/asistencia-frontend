@@ -32,9 +32,6 @@ export default function ModalAsistenciaAprendiz({
             {asistencia.horaInicio} - {asistencia.horaFin}
           </p>
 
-          {/* IMPORTANTE: Usamos key para forzar el reinicio si el ID cambia 
-            y pasamos la duración que viene del objeto asistencia.
-          */}
           <CountdownAprendiz 
             key={asistencia.id} 
             minutos={asistencia.duracion} 

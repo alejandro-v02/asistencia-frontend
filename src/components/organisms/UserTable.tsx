@@ -28,25 +28,21 @@ export default function UserTable({ usuarios, onEditar, onCambiarEstado }: any) 
                   key={usuario.id_usuario} 
                   className="hover:bg-blue-50/30 transition-colors group"
                 >
-                  {/* Documento */}
                   <td className="px-6 py-4 text-sm font-semibold text-slate-600">
                     {usuario.usuario_persona?.documento || "N/A"}
                   </td>
 
-                  {/* Nombres */}
                   <td className="px-6 py-4">
                     <div className="text-sm font-bold text-slate-700">
                       {usuario.usuario_persona?.nombres || "N/A"}
                     </div>
                   </td>
 
-                  {/* Contacto */}
                   <td className="px-6 py-4">
                     <div className="text-sm text-slate-600">{usuario.usuario_persona?.correo || "N/A"}</div>
                     <div className="text-xs text-slate-400">{usuario.usuario_persona?.telefono || "N/A"}</div>
                   </td>
 
-                  {/* Usuario / Rol */}
                   <td className="px-6 py-4">
                     <div className="text-sm font-medium text-blue-600 mb-1">
                       {usuario.credenciales[0]?.login || "N/A"}
@@ -56,7 +52,6 @@ export default function UserTable({ usuarios, onEditar, onCambiarEstado }: any) 
                     </span>
                   </td>
 
-                  {/* Estado */}
                   <td className="px-6 py-4 text-center">
                     <span 
                       className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide ${
@@ -70,7 +65,6 @@ export default function UserTable({ usuarios, onEditar, onCambiarEstado }: any) 
                     </span>
                   </td>
 
-                  {/* Acciones */}
                   <td className="px-6 py-4">
                     <div className="flex justify-center gap-2">
                       <button

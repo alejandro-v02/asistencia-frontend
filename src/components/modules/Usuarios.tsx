@@ -7,10 +7,12 @@ import UserTable from "../organisms/UserTable";
 export default function Usuarios() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
-  const [usuarios, setUsuarios] = useState([]);
-  const [municipios, setMunicipios] = useState([]);
-  const [roles, setRoles] = useState([]);
+  const [usuarios, setUsuarios] = useState<any[]>([]);
+  const [municipios, setMunicipios] = useState<any[]>([]);
+  const [roles, setRoles] = useState<any[]>([]);
   const [busqueda, setBusqueda] = useState("");
+  const [programas, setProgramas] = useState<any[]>([]);
+  const [cursos, setCursos] = useState<any[]>([]);
 
   const [form, setForm] = useState({
     id_persona: "",
@@ -27,7 +29,9 @@ export default function Usuarios() {
     aplicativo_fk: "",
     login: "",
     password: "",
-    rol_fk: ""
+    rol_fk: "",
+    programa_fk: "",
+    curso_fk: ""
   });
 
   useEffect(() => {
@@ -38,8 +42,17 @@ export default function Usuarios() {
     if (mostrarFormulario) {
       cargarMunicipios();
       cargarRoles();
+      cargarProgramas();
     }
   }, [mostrarFormulario]);
+
+  useEffect(() => {
+    if (form.programa_fk) {
+      cargarCursosPorPrograma(form.programa_fk);
+    } else {
+      setCursos([]);
+    }
+  }, [form.programa_fk]);
 
   const cargarUsuarios = async () => {
     try {
@@ -74,8 +87,42 @@ export default function Usuarios() {
     }
   };
 
+  const cargarProgramas = async () => {
+    try {
+      const res = await axios.get("http://localhost:3000/programas/listar", {
+        headers: { Authorization: `Bearer ${Cookies.get("token")}` }
+      });
+      setProgramas(res.data);
+    } catch (error) {
+      console.error("Error cargando programas:", error);
+    }
+  };
+
+  const cargarCursosPorPrograma = async (programaId: string) => {
+    try {
+      const res = await axios.get("http://localhost:3000/curso/listar", {
+        headers: { Authorization: `Bearer ${Cookies.get("token")}` }
+      });
+      // Filtrar cursos por el programa seleccionado
+      const cursosFiltrados = res.data.filter(
+        (curso: any) => String(curso.programa_fk) === String(programaId)
+      );
+      setCursos(cursosFiltrados);
+    } catch (error) {
+      console.error("Error cargando cursos:", error);
+      setCursos([]);
+    }
+  };
+
   const handleChange = (e: any) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    // Si cambia el programa, resetear el curso
+    if (name === "programa_fk") {
+      setForm({ ...form, [name]: value, curso_fk: "" });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   const handleSubmit = async (e: any) => {
@@ -84,6 +131,15 @@ export default function Usuarios() {
     if (!form.documento || !form.nombres || !form.direccion || !form.telefono || 
         !form.correo || !form.municipio_fk || !form.login || !form.rol_fk) {
       alert("Por favor, complete todos los campos obligatorios.");
+      return;
+    }
+
+    // Validar si es aprendiz que tenga programa y curso
+    const rolSeleccionado = roles.find((r: any) => String(r.id_rol) === String(form.rol_fk));
+    const esAprendiz = rolSeleccionado?.nombre?.toLowerCase() === "aprendiz";
+    
+    if (esAprendiz && (!form.programa_fk || !form.curso_fk)) {
+      alert("Para el rol de aprendiz, debe seleccionar un programa y un curso.");
       return;
     }
 
@@ -104,146 +160,78 @@ export default function Usuarios() {
     }
   };
 
-  const crearUsuario = async () => {
-    if (!form.password) {
-      alert("La contraseña es obligatoria para crear un usuario");
-      return;
-    }
+const crearUsuario = async () => {
+  if (!form.password) {
+    alert("La contraseña es obligatoria para crear un usuario");
+    return;
+  }
 
-    const personaRes = await axios.post("http://localhost:3000/persona/registrar", {
-      documento: form.documento,
-      nombres: form.nombres,
-      direccion: form.direccion,
-      telefono: form.telefono,
-      correo: form.correo,
-      genero: form.genero,
-      estado: form.estado,
-      municipio_fk: Number(form.municipio_fk),
-    }, {
-      headers: { Authorization: `Bearer ${Cookies.get("token")}` }
-    });
+  const rolSeleccionado = roles.find((r: any) => String(r.id_rol) === String(form.rol_fk));
+  const esAprendiz = rolSeleccionado?.nombre?.toLowerCase() === "aprendiz";
 
-    const personaID = personaRes.data.id_persona;
-
-    const usuarioRes = await axios.post("http://localhost:3000/usuario/registrar", {
-      persona_fk: personaID,
-      aplicativo_fk: 1
-    }, {
-      headers: { Authorization: `Bearer ${Cookies.get("token")}` }
-    });
-
-    const usuarioID = usuarioRes.data.usuario.id_usuario;
-
-    await axios.post("http://localhost:3000/credencial/registrar", {
-      login: form.login,
-      password: form.password,
-      rol_fk: Number(form.rol_fk),
-      usuario_fk: usuarioID
-    }, {
-      headers: { Authorization: `Bearer ${Cookies.get("token")}` }
-    });
-
-    alert("Usuario creado correctamente");
-    resetearFormulario();
-    cargarUsuarios();
+  const userData = {
+    // Datos de Persona
+    documento: form.documento,
+    nombres: form.nombres,
+    direccion: form.direccion,
+    telefono: form.telefono,
+    correo: form.correo,
+    genero: form.genero,
+    municipio_fk: form.municipio_fk,
+    estado: "activo",
+    
+    // Datos de Credenciales
+    login: form.login,
+    password: form.password,
+    rol_fk: form.rol_fk,
+    
+    // Datos de Usuario
+    aplicativo_fk: 1,
+    
+    // Datos de Matrícula (solo si es aprendiz)
+    ...(esAprendiz && { curso_fk: form.curso_fk })
   };
 
-  const actualizarUsuario = async () => {
-    console.log("Datos a actualizar:", {
-      id_persona: form.id_persona,
-      id_usuario: form.id_usuario,
-      id_credencial: form.id_credencial,
-      aplicativo_fk: form.aplicativo_fk
-    });
+  const res = await axios.post("http://localhost:3000/usuario/completo", userData, {
+    headers: { Authorization: `Bearer ${Cookies.get("token")}` }
+  });
 
-    try {
-      const personaData = {
-        documento: Number(form.documento),
-        nombres: form.nombres,
-        direccion: form.direccion,
-        telefono: form.telefono,
-        correo: form.correo,
-        genero: form.genero,
-        municipio_fk: Number(form.municipio_fk),
-        estado: form.estado
-      };
+  alert(res.data.mensaje);
+  resetearFormulario();
+  cargarUsuarios();
+};
 
-      console.log("Enviando datos de persona:", personaData);
+const actualizarUsuario = async () => {
+  const rolSeleccionado = roles.find((r: any) => String(r.id_rol) === String(form.rol_fk));
+  const esAprendiz = rolSeleccionado?.nombre?.toLowerCase() === "aprendiz";
 
-      const personaResponse = await axios.put(
-        `http://localhost:3000/persona/actualizar/${form.id_persona}`, 
-        personaData,
-        {
-          headers: { Authorization: `Bearer ${Cookies.get("token")}` }
-        }
-      );
-      
-      console.log("Persona actualizada correctamente");
-
-      const aplicativoFk = form.aplicativo_fk ? Number(form.aplicativo_fk) : 1;
-      
-      await axios.put(`http://localhost:3000/usuario/actualizar/${form.id_usuario}`, {
-        persona_fk: Number(form.id_persona),
-        aplicativo_fk: aplicativoFk
-      }, {
-        headers: { Authorization: `Bearer ${Cookies.get("token")}` }
-      });
-      if (form.id_credencial) {
-        const credencialData: any = {
-          login: form.login,
-          rol_fk: Number(form.rol_fk),
-          usuario_fk: Number(form.id_usuario)
-        };
-
-        if (form.password && form.password.trim() !== "") {
-          credencialData.password = form.password;
-        }
-
-        await axios.put(`http://localhost:3000/credencial/actualizar/${form.id_credencial}`, 
-          credencialData,
-          {
-            headers: { Authorization: `Bearer ${Cookies.get("token")}` }
-          }
-        );
-      } else {
-        console.warn("No se tiene id_credencial, buscando credencial...");
-        
-        const credencialData: any = {
-          login: form.login,
-          rol_fk: Number(form.rol_fk),
-          usuario_fk: Number(form.id_usuario)
-        };
-
-        if (form.password && form.password.trim() !== "") {
-          credencialData.password = form.password;
-        }
-
-        const credenciales = await axios.get(
-          `http://localhost:3000/credencial/buscar-por-usuario/${form.id_usuario}`,
-          {
-            headers: { Authorization: `Bearer ${Cookies.get("token")}` }
-          }
-        );
-
-        if (credenciales.data && credenciales.data.id_credencial) {
-          await axios.put(
-            `http://localhost:3000/credencial/actualizar/${credenciales.data.id_credencial}`,
-            credencialData,
-            {
-              headers: { Authorization: `Bearer ${Cookies.get("token")}` }
-            }
-          );
-        }
-      }
-
-      alert("Usuario actualizado correctamente");
-      resetearFormulario();
-      cargarUsuarios();
-    } catch (error: any) {
-      console.error("Error en actualización:", error);
-      throw error;
-    }
+  const userData = {
+    documento: form.documento,
+    nombres: form.nombres,
+    direccion: form.direccion,
+    telefono: form.telefono,
+    correo: form.correo,
+    genero: form.genero,
+    municipio_fk: form.municipio_fk,
+    estado: form.estado,
+    login: form.login,
+    password: form.password,
+    rol_fk: form.rol_fk,
+        ...(esAprendiz && { curso_fk: form.curso_fk })
   };
+
+  const res = await axios.put(
+    `http://localhost:3000/usuario/completo/${form.id_usuario}`,
+    userData,
+    {
+      headers: { Authorization: `Bearer ${Cookies.get("token")}` }
+    }
+  );
+
+  alert(res.data.mensaje);
+  resetearFormulario();
+  cargarUsuarios();
+};
 
   const handleEditar = (usuario: any) => {
     console.log("Usuario a editar:", usuario);
@@ -273,16 +261,25 @@ export default function Usuarios() {
       aplicativo_fk: usuario.aplicativo_fk || "1",
       login: credencial.login || "",
       password: "",
-      rol_fk: credencial.rol_credencia?.id_rol || credencial.rol_fk || ""
+      rol_fk: credencial.rol_credencia?.id_rol || credencial.rol_fk || "",
+      programa_fk: usuario.aprendiz?.curso?.programa_fk || "",
+      curso_fk: usuario.aprendiz?.curso?.id_curso || ""
     });
     
     console.log("Formulario cargado con:", {
       id_credencial: credencial.id_credencial,
       login: credencial.login,
-      rol_fk: credencial.rol_credencia?.id_rol || credencial.rol_fk
+      rol_fk: credencial.rol_credencia?.id_rol || credencial.rol_fk,
+      programa_fk: usuario.aprendiz?.curso?.programa_fk,
+      curso_fk: usuario.aprendiz?.curso?.id_curso
     });
     
     setMostrarFormulario(true);
+    
+    // Si tiene programa, cargar los cursos de ese programa
+    if (usuario.aprendiz?.curso?.programa_fk) {
+      cargarCursosPorPrograma(usuario.aprendiz.curso.programa_fk);
+    }
   };
 
   const handleCambiarEstado = async (usuario: any) => {
@@ -330,10 +327,13 @@ export default function Usuarios() {
       aplicativo_fk: "",
       login: "",
       password: "",
-      rol_fk: ""
+      rol_fk: "",
+      programa_fk: "",
+      curso_fk: ""
     });
     setMostrarFormulario(false);
     setModoEdicion(false);
+    setCursos([]);
   };
 
   const usuariosFiltrados = usuarios.filter((usuario: any) => {
@@ -367,8 +367,9 @@ export default function Usuarios() {
             resetearFormulario();
             setMostrarFormulario(true);
           }}
-          className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition bosx-shadow-lg shadow-blue-200 font-bold"
-        >+ Añadir Usuario
+          className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-200 font-bold"
+        >
+          + Añadir Usuario
         </button>
       </div>
 
@@ -377,6 +378,8 @@ export default function Usuarios() {
           form={form}
           municipios={municipios}
           roles={roles}
+          programas={programas}
+          cursos={cursos}
           handleChange={handleChange}
           handleSubmit={handleSubmit}
           cerrar={resetearFormulario}

@@ -37,7 +37,6 @@ export default function ChatIaPanelInstru() {
         </p>
       </div>
 
-      {/* MENSAJES (SCROLL SOLO AQUÍ) */}
       <div className="flex-1 overflow-y-auto">
         <ChatMessageListInstru
           mensajes={mensajes}
@@ -45,7 +44,6 @@ export default function ChatIaPanelInstru() {
         />
       </div>
 
-      {/* INPUT */}
       <ChatInputInstru
         value={input}
         onChange={setInput}

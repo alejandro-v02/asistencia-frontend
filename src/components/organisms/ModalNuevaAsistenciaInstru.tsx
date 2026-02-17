@@ -16,7 +16,6 @@ export default function ModalNuevaAsistenciaInstru({
 
   const [search, setSearch] = useState("");
 
-  // Asistencia actual
   const data = {
     curso: "ADSO",
     ficha: "2698765",
@@ -25,7 +24,6 @@ export default function ModalNuevaAsistenciaInstru({
     horaFin: "09:00",
   };
 
-  // Asistencias siguientes
   const siguientes = [
     {
       id: 1,
@@ -51,12 +49,10 @@ export default function ModalNuevaAsistenciaInstru({
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50">
       <div className="bg-white rounded-3xl p-6 w-full max-w-xl space-y-6 shadow-xl">
 
-        {/* TÍTULO */}
         <h3 className="text-2xl font-bold text-center text-blue-600">
           Nueva Asistencia
         </h3>
 
-        {/* ASISTENCIA ACTUAL */}
         <div className="border border-gray-200 rounded-2xl p-4 space-y-2 bg-gray-50">
           <h1 className="text-lg font-semibold text-blue-600">Asistencia de Hoy</h1>
           <p><strong>Curso:</strong> {data.curso}</p>
@@ -72,7 +68,6 @@ export default function ModalNuevaAsistenciaInstru({
           />
         </div>
 
-        {/* BUSCADOR */}
         <input
           type="text"
           placeholder="Buscar próximas asistencias..."
@@ -89,7 +84,6 @@ export default function ModalNuevaAsistenciaInstru({
           "
         />
 
-        {/* ASISTENCIAS SIGUIENTES */}
         <div className="space-y-3 max-h-40 overflow-y-auto">
           {filtradas.length === 0 && (
             <p className="text-sm text-gray-500 text-center">
@@ -110,7 +104,6 @@ export default function ModalNuevaAsistenciaInstru({
           ))}
         </div>
 
-        {/* CANCELAR */}
         <button
           onClick={onClose}
           className="w-full text-gray-600 hover:text-gray-800 transition"

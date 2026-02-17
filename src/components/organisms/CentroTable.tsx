@@ -50,7 +50,6 @@ export default function CentroTable({ centros, onEditarCentro, onEditarSede }: a
                 </div>
               </td>
 
-              {/* Columna Acciones Centro */}
               <td className="p-4 text-center">
                 <button
                   className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-blue-600 hover:text-white transition-all duration-200 shadow-sm"

@@ -1,115 +1,169 @@
-import { useState } from "react";
-import ButtonPrimaryInstru from "../atoms/ButtonPrimaryInstru";
+// ORGANISM - INSTRUCTOR
+// Modal para crear nueva asistencia
 
-interface Props {
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import ButtonInstru from '../atoms/ButtonInstru';
+
+interface ModalNuevaAsistenciaInstruProps {
   open: boolean;
   onClose: () => void;
-  onIniciar: (data: any) => void;
+  onIniciar: (asistencia: any) => void;
 }
 
-export default function ModalNuevaAsistenciaInstru({
-  open,
-  onClose,
-  onIniciar,
-}: Props) {
-  if (!open) return null;
+export default function ModalNuevaAsistenciaInstru({ 
+  open, 
+  onClose, 
+  onIniciar 
+}: ModalNuevaAsistenciaInstruProps) {
+  const [horarios, setHorarios] = useState<any[]>([]);
+  const [horarioSeleccionado, setHorarioSeleccionado] = useState('');
+  const [observaciones, setObservaciones] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [loadingHorarios, setLoadingHorarios] = useState(false);
 
-  const [search, setSearch] = useState("");
+  useEffect(() => {
+    if (open) {
+      cargarHorarios();
+      setHorarioSeleccionado('');
+      setObservaciones('');
+    }
+  }, [open]);
 
-  const data = {
-    curso: "ADSO",
-    ficha: "2698765",
-    ambiente: "Aula 305",
-    horaInicio: "07:00",
-    horaFin: "09:00",
+  const cargarHorarios = async () => {
+    setLoadingHorarios(true);
+    try {
+      const res = await axios.get('http://localhost:3001/instructor/horarios', {
+        headers: { Authorization: `Bearer ${Cookies.get('token')}` }
+      });
+      setHorarios(res.data);
+    } catch (error: any) {
+      console.error('Error cargando horarios:', error);
+      alert(error.response?.data?.error || 'Error al cargar horarios');
+    } finally {
+      setLoadingHorarios(false);
+    }
   };
 
-  const siguientes = [
-    {
-      id: 1,
-      curso: "ADSO",
-      ficha: "2698765",
-      ambiente: "Aula 305",
-      horario: "09:00 - 11:00",
-    },
-    {
-      id: 2,
-      curso: "ADSO",
-      ficha: "2698765",
-      ambiente: "Aula 204",
-      horario: "13:00 - 15:00",
-    },
-  ];
+  const handleIniciar = async () => {
+    if (!horarioSeleccionado) {
+      alert('Por favor seleccione un horario');
+      return;
+    }
 
-  const filtradas = siguientes.filter((s) =>
-    s.ambiente.toLowerCase().includes(search.toLowerCase())
-  );
+    setLoading(true);
+    try {
+      // Crear la asistencia en el backend
+      const res = await axios.post(
+        'http://localhost:3001/instructor/asistencia/crear',
+        {
+          horario_fk: parseInt(horarioSeleccionado),
+          observaciones: observaciones || null
+        },
+        {
+          headers: { Authorization: `Bearer ${Cookies.get('token')}` }
+        }
+      );
+
+      if (res.data.status === 200) {
+        // Obtener la asistencia creada con los aprendices
+        const asistenciaRes = await axios.get(
+          `http://localhost:3001/instructor/asistencia/${res.data.id_formacion}`,
+          {
+            headers: { Authorization: `Bearer ${Cookies.get('token')}` }
+          }
+        );
+
+        // Pasar la asistencia al componente padre
+        onIniciar(asistenciaRes.data);
+      }
+    } catch (error: any) {
+      console.error('Error creando asistencia:', error);
+      const errorMsg = error.response?.data?.error || 'Error al crear asistencia';
+      alert(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50">
-      <div className="bg-white rounded-3xl p-6 w-full max-w-xl space-y-6 shadow-xl">
+    <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">Nueva Asistencia</h2>
 
-        <h3 className="text-2xl font-bold text-center text-blue-600">
-          Nueva Asistencia
-        </h3>
+        <div className="space-y-4">
+          {/* Selector de Horario */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Seleccionar Horario *
+            </label>
+            {loadingHorarios ? (
+              <div className="text-center py-4 text-gray-500">
+                Cargando horarios...
+              </div>
+            ) : horarios.length === 0 ? (
+              <div className="text-center py-4 text-red-500">
+                No tienes horarios asignados
+              </div>
+            ) : (
+              <select
+                value={horarioSeleccionado}
+                onChange={(e) => setHorarioSeleccionado(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                disabled={loading}
+              >
+                <option value="">Seleccione un horario...</option>
+                {horarios.map((horario) => (
+                  <option key={horario.id_horario} value={horario.id_horario}>
+                    {horario.dia_semana} - {horario.hora_inicio.slice(0, 5)} a {horario.hora_fin.slice(0, 5)}
+                    {horario.curso && ` - ${horario.curso.codigo || 'Curso'}`}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
 
-        <div className="border border-gray-200 rounded-2xl p-4 space-y-2 bg-gray-50">
-          <h1 className="text-lg font-semibold text-blue-600">Asistencia de Hoy</h1>
-          <p><strong>Curso:</strong> {data.curso}</p>
-          <p><strong>Ficha:</strong> {data.ficha}</p>
-          <p><strong>Ambiente:</strong> {data.ambiente}</p>
-          <p>
-            <strong>Horario:</strong> {data.horaInicio} - {data.horaFin}
-          </p>
+          {/* Observaciones */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Observaciones (Opcional)
+            </label>
+            <textarea
+              value={observaciones}
+              onChange={(e) => setObservaciones(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none"
+              rows={3}
+              placeholder="Ingrese observaciones sobre la clase..."
+              disabled={loading}
+            />
+          </div>
 
-          <ButtonPrimaryInstru
-            text="Iniciar asistencia"
-            onClick={() => onIniciar(data)}
+          {/* Información */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-sm text-blue-800">
+              <strong>Nota:</strong> Los aprendices tendrán 15 minutos después del inicio de clase para registrar su asistencia.
+            </p>
+          </div>
+        </div>
+
+        {/* Botones */}
+        <div className="flex gap-3 mt-6">
+          <ButtonInstru
+            text={loading ? 'Iniciando...' : 'Iniciar Asistencia'}
+            onClick={handleIniciar}
+            disabled={loading || loadingHorarios || horarios.length === 0}
+            variant="primary"
+          />
+          <ButtonInstru
+            text="Cancelar"
+            variant="secondary"
+            onClick={onClose}
+            disabled={loading}
           />
         </div>
-
-        <input
-          type="text"
-          placeholder="Buscar próximas asistencias..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="
-            w-full
-            px-4 py-2
-            border border-gray-300
-            rounded-lg
-            focus:outline-none
-            focus:ring-2
-            focus:ring-blue-500
-          "
-        />
-
-        <div className="space-y-3 max-h-40 overflow-y-auto">
-          {filtradas.length === 0 && (
-            <p className="text-sm text-gray-500 text-center">
-              No hay asistencias siguientes
-            </p>
-          )}
-
-          {filtradas.map((s) => (
-            <div
-              key={s.id}
-              className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm"
-            >
-              <p><strong>Curso:</strong> {s.curso}</p>
-              <p><strong>Ficha:</strong> {s.ficha}</p>
-              <p><strong>Ambiente:</strong> {s.ambiente}</p>
-              <p><strong>Horario:</strong> {s.horario}</p>
-            </div>
-          ))}
-        </div>
-
-        <button
-          onClick={onClose}
-          className="w-full text-gray-600 hover:text-gray-800 transition"
-        >
-          Cancelar
-        </button>
       </div>
     </div>
   );

@@ -1,11 +1,14 @@
-interface Props {
+// ATOM - INSTRUCTOR
+// Componente de título para módulo de instructor
+
+interface TitleInstruProps {
   text: string;
 }
 
-export default function TitleInstru({ text }: Props) {
+export default function TitleInstru({ text }: TitleInstruProps) {
   return (
-    <h2 className="text-3xl font-bold text-center text-blue-700 mb-6">
+    <h1 className="text-3xl font-bold text-gray-800 mb-6">
       {text}
-    </h2>
+    </h1>
   );
 }
